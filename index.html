@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimax Demo</title>
+
+    <style>
+
+        @font-face {
+            font-family: Shantell Sans;
+            src: url('ShantellSans.ttf');
+        }
+        
+        #grid {
+            margin: 25px 0px;
+            display: grid;
+            grid-template-columns: repeat(3, 130px);
+            grid-template-rows: repeat(3, 130px);
+            justify-content: center;
+            text-align: center;
+            font-size: 5.5rem;
+            color: #4b3621;
+            font-family: 'Shantell Sans';
+            /* touch-action: none; */
+            /* user-select: none; */
+        }
+
+        .cell {
+            line-height: 130px;
+            border: 2.5px solid black;
+        }
+
+        button {
+            display: block;
+            margin: 0 auto;
+            padding: 7px 25px;
+            border: 1px solid black;
+            background: transparent;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        p, a {
+            display: block;
+            margin: 0 auto;
+            font-size: 1rem;
+            padding: 7px 25px;
+            max-width: fit-content;
+            font-family: sans-serif;
+            line-height: 1.5;
+        }
+
+        button:hover {
+            background: grey;
+        }
+
+        body {
+            margin: unset;
+        }
+
+        #play-btn {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="grid">
+        <span class="cell" id="0"></span>
+        <span class="cell" id="1"></span>
+        <span class="cell" id="2"></span>
+        <span class="cell" id="3"></span>
+        <span class="cell" id="4"></span>
+        <span class="cell" id="5"></span>
+        <span class="cell" id="6"></span>
+        <span class="cell" id="7"></span>
+        <span class="cell" id="8"></span>
+    </div>
+    <button id="play-btn">AI Goes</button>
+    <button id="new-game">New Game</button>
+    <p id="winner"></p>
+    <p></p>
+    <p id="expanded"></p>
+    <p id="prunes"></p>
+    <p id="pathLength"></p>
+    <p>
+        This is an implementation of an algorithm called Minimax along with an implementation of alpha-beta (α-β) pruning.
+        It is a basic algorithm used for simple multiplayer games in the AI community.
+        It works by assuming both you and itself will make the best move available and prioritizes the most optimal path to winning.
+    </p>
+    <a href="https://en.wikipedia.org/wiki/Minimax">Wikipedia: Minimax</a>
+    <a href="https://github.com/noahBax/Minimax-Tic-Tac-Toe-Implementation">Github Repository</a>
+    
+    <script src="script.js"></script>
+</body>
+</html>
