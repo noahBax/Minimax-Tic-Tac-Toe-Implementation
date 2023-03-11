@@ -120,10 +120,10 @@ function insertCompMark() {
         // Check to see if the board we were given has a winner scenario
         // The score for the winner scenario is based on the depth into the search tree we are
         if (availableCellIndexes.length < 7){
-            if (checkIfIsWinner(currBdState, humanMark)) {
+            if (currMark == aiMark && checkIfIsWinner(currBdState, humanMark)) {
                 ret.minimaxValue = -lookIndex;
                 return ret;
-            } else if (checkIfIsWinner(currBdState, aiMark)) {
+            } else if (currMark == humanMark && checkIfIsWinner(currBdState, aiMark)) {
                 ret.minimaxValue = lookIndex;
                 return ret;
             } else if (availableCellIndexes.length == 0) {

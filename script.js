@@ -30,7 +30,6 @@ function startNewGame() {
     gameOver = false;
     gameCells.forEach(i => {
         i.innerText = "";
-        i.style.color = "#4b3621";
     });
     WINNER.innerText = "";
     PLAY_GAME.style.display = "block";
@@ -40,10 +39,10 @@ function startNewGame() {
     EXPANDED.textContent = '';
 }
 function getAllEmptyCellsIndexes(currBdState) {
-    //@ts-ignore
-    return currBdState.filter(i => i != "X" && i != "O");
+    // Filter out cells that have pieces
+    //@ts-expect-error
+    return currBdState.filter(i => i != aiMark && i != humanMark);
 }
-var timer = 150;
 function checkIfIsWinner(currBdState, mark) {
     if ((currBdState[0] == mark && (currBdState[1] == mark && currBdState[2] == mark ||
         currBdState[3] == mark && currBdState[6] == mark ||
@@ -75,11 +74,11 @@ function insertCompMark() {
         // Check to see if the board we were given has a winner scenario
         // The score for the winner scenario is based on the depth into the search tree we are
         if (availableCellIndexes.length < 7) {
-            if (checkIfIsWinner(currBdState, humanMark)) {
+            if (currMark == aiMark && checkIfIsWinner(currBdState, humanMark)) {
                 ret.minimaxValue = -lookIndex;
                 return ret;
             }
-            else if (checkIfIsWinner(currBdState, aiMark)) {
+            else if (currMark == humanMark && checkIfIsWinner(currBdState, aiMark)) {
                 ret.minimaxValue = lookIndex;
                 return ret;
             }
@@ -116,13 +115,10 @@ function insertCompMark() {
                         ret.minimaxValue = alpha_beta[0];
                         paths_pruned++;
                         return ret;
-                        // Haha, now we have killed its siblings
                     }
                 }
             }
             else {
-                // I'mma disable the comment section here. Read above lazy
-                // Wait, who's lazy? You or me?
                 const result = minimax(boardCopy, aiMark, lookIndex - 1, [-Infinity, alpha_beta[1]]);
                 result.index = availableCellIndexes[j];
                 ret.children.push(result);
@@ -138,12 +134,10 @@ function insertCompMark() {
             }
         }
         // If we made it here, we just need to return what we have
-        // Our children liked what we gave them.
-        // The metaphor kinda breaks down here
         ret.minimaxValue = currMark == aiMark ? alpha_beta[0] : alpha_beta[1];
         return ret;
     }
-    // Get the board state
+    // Initialize the board state
     const currentBoardState = [];
     // Store the values of the squares
     gameCells.forEach((c, i) => {
@@ -189,7 +183,7 @@ function checkIfGameIsOver() {
         PLAY_GAME.style.display = "none";
     }
     else if (emptyCells == 0) {
-        // Check if there are empty cells
+        // If there are no empty cells and the above checks failed, then the game is over
         WINNER.innerText = "Draw!";
         gameOver = true;
         NEW_GAME.style.display = "block";
