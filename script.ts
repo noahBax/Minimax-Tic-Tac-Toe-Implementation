@@ -42,7 +42,6 @@ function startNewGame() {
     gameOver = false;
     gameCells.forEach( i => {
         i.innerText = "";
-        i.style.color = "#4b3621";
     });
     WINNER.innerText = "";
     PLAY_GAME.style.display = "block";
@@ -54,12 +53,11 @@ function startNewGame() {
 }
 
 function getAllEmptyCellsIndexes(currBdState: BoardState): number[] {
-    //@ts-ignore
-    return currBdState.filter(i => i != "X" && i != "O");
+    // Filter out cells that have pieces
+    //@ts-expect-error
+    return currBdState.filter(i => i != aiMark && i != humanMark);
 }
 
-
-var timer = 150;
 
 interface NodeDescription {
     children?: | NodeDescription[];
@@ -69,9 +67,36 @@ interface NodeDescription {
     passedInfo: [number, number];
 }
 
-type BoardState = ('X' | 'O' | number)[];
+
 
 type Pieces = 'X' | 'O';
+
+type BoardState = (Pieces | number)[];
+
+
+
+function checkIfIsWinner(currBdState: BoardState, mark: Pieces): boolean {
+    if (    
+        (currBdState[0] == mark && (
+            currBdState[1] == mark && currBdState[2] == mark ||
+            currBdState[3] == mark && currBdState[6] == mark ||
+            currBdState[4] == mark && currBdState[8] == mark
+        )) ||
+        (currBdState[8] == mark && (
+            currBdState[7] == mark && currBdState[6] == mark ||
+            currBdState[5] == mark && currBdState[2] == mark
+        )) ||
+        (currBdState[4] == mark && (
+            currBdState[1] == mark && currBdState[7] == mark ||
+            currBdState[3] == mark && currBdState[5] == mark ||
+            currBdState[2] == mark && currBdState[6] == mark
+        ))
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+}
 
 function insertCompMark() {
 
@@ -79,27 +104,6 @@ function insertCompMark() {
     let nodes_expanded = 0;
     let paths_pruned = 0;
     let worst_index = 9;
-
-
-    function checkIfWinnerFound(currBdState: BoardState, currMark: Pieces) {
-        if (    
-            (currBdState[0] == currMark && (
-                currBdState[1] == currMark && currBdState[2] == currMark ||
-                currBdState[3] == currMark && currBdState[6] == currMark ||
-                currBdState[4] == currMark && currBdState[8] == currMark
-            )) ||
-            (currBdState[8] == currMark && (currBdState[7] == currMark && currBdState[6] == currMark || currBdState[5] == currMark && currBdState[2] == currMark)) ||
-            (currBdState[4] == currMark && (
-                currBdState[1] == currMark && currBdState[7] == currMark ||
-                currBdState[3] == currMark && currBdState[5] == currMark ||
-                currBdState[2] == currMark && currBdState[6] == currMark
-            ))
-        ) {
-          return true;
-        } else {
-          return false;
-        }
-    }
 
     function minimax(currBdState: BoardState, currMark: Pieces, lookIndex: number, alpha_beta: [number, number]): NodeDescription {
         // Keep in mind, currBdState will not (except for the beginning) be the state of the current board
@@ -116,10 +120,10 @@ function insertCompMark() {
         // Check to see if the board we were given has a winner scenario
         // The score for the winner scenario is based on the depth into the search tree we are
         if (availableCellIndexes.length < 7){
-            if (checkIfWinnerFound(currBdState, humanMark)) {
+            if (checkIfIsWinner(currBdState, humanMark)) {
                 ret.minimaxValue = -lookIndex;
                 return ret;
-            } else if (checkIfWinnerFound(currBdState, aiMark)) {
+            } else if (checkIfIsWinner(currBdState, aiMark)) {
                 ret.minimaxValue = lookIndex;
                 return ret;
             } else if (availableCellIndexes.length == 0) {
@@ -174,12 +178,9 @@ function insertCompMark() {
                         paths_pruned++;
                         return ret;
 
-                        // Haha, now we have killed its siblings
                     }
                 }
             } else {
-                // I'mma disable the comment section here. Read above lazy
-                // Wait, who's lazy? You or me?
 
                 const result = minimax(boardCopy, aiMark, lookIndex - 1, [-Infinity, alpha_beta[1]]);
                 result.index = availableCellIndexes[j];
@@ -200,15 +201,13 @@ function insertCompMark() {
         }
 
         // If we made it here, we just need to return what we have
-        // Our children liked what we gave them.
-        // The metaphor kinda breaks down here
 
         ret.minimaxValue = currMark == aiMark ? alpha_beta[0] : alpha_beta[1];
         return ret
         
     }
     
-    // Get the board state
+    // Initialize the board state
     const currentBoardState: BoardState = [];
     
     // Store the values of the squares
@@ -247,45 +246,22 @@ function checkIfGameIsOver() {
 
     
     // First check if we have enough pieces on the board
+    // Technically speaking, this could be < 5, but what if you want the AI to go multiple times?
     if (emptyCells > 6) return;
 
-    // Check if there are no empty cells
-    if (emptyCells == 0) {
-        WINNER.innerText = "Draw!";
-        gameOver = true;
-        NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
-    } else if (
-        (currentBoardState[0] == aiMark && (
-            currentBoardState[1] == aiMark && currentBoardState[2] == aiMark ||
-            currentBoardState[3] == aiMark && currentBoardState[6] == aiMark ||
-            currentBoardState[4] == aiMark && currentBoardState[8] == aiMark
-        )) ||
-        (currentBoardState[8] == aiMark && (
-            currentBoardState[7] == aiMark && currentBoardState[6] == aiMark ||
-            currentBoardState[5] == aiMark && currentBoardState[2] == aiMark
-        )) ||
-        (currentBoardState[4] == aiMark && (
-            currentBoardState[1] == aiMark && currentBoardState[7] == aiMark ||
-            currentBoardState[3] == aiMark && currentBoardState[5] == aiMark ||
-            currentBoardState[2] == aiMark && currentBoardState[6] == aiMark
-        ))
-    ) {
+    if (checkIfIsWinner(currentBoardState, aiMark)) {
         WINNER.innerText = "AI Win!";
         gameOver = true;
         NEW_GAME.style.display = "block";
         PLAY_GAME.style.display = "none";
-    } else if (
-        (currentBoardState[0] == humanMark && (currentBoardState[1] == humanMark && currentBoardState[2] == humanMark || currentBoardState[3] == humanMark && currentBoardState[6] == humanMark)) ||
-        (currentBoardState[8] == humanMark && (currentBoardState[7] == humanMark && currentBoardState[6] == humanMark || currentBoardState[5] == humanMark && currentBoardState[2] == humanMark)) ||
-        (currentBoardState[4] == humanMark && (
-            currentBoardState[1] == humanMark && currentBoardState[7] == humanMark ||
-            currentBoardState[3] == humanMark && currentBoardState[5] == humanMark ||
-            currentBoardState[0] == humanMark && currentBoardState[8] == humanMark ||
-            currentBoardState[2] == humanMark && currentBoardState[6] == humanMark
-        ))
-    ) {
-        WINNER.innerText = "Human Win!";
+    } else if (checkIfIsWinner(currentBoardState, humanMark)) {
+        WINNER.innerText = "Cheater!";
+        gameOver = true;
+        NEW_GAME.style.display = "block";
+        PLAY_GAME.style.display = "none";
+    } else if (emptyCells == 0) {
+        // If there are no empty cells and the above checks failed, then the game is over
+        WINNER.innerText = "Draw!";
         gameOver = true;
         NEW_GAME.style.display = "block";
         PLAY_GAME.style.display = "none";
