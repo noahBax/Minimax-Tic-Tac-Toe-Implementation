@@ -154,8 +154,8 @@ function insertCompMark() {
     // Now that we know the best play info, lets play on that space
     gameCells[bestPlayInfo.index].innerText = aiMark;
     // Update stats
-    PRUNES.textContent = 'Paths Pruned:' + paths_pruned;
-    EXPANDED.textContent = `Nodes Expanded: ${nodes_expanded - 1}`; // Minus 1 because the first time we run minimax is not an expansion
+    PRUNES.textContent = `Paths Pruned: ${paths_pruned}`;
+    EXPANDED.textContent = `Nodes Expanded: ${nodes_expanded}`;
     PATH_LENGTH.textContent = `Deepest Path: ${9 - worst_index}`;
 }
 function checkIfGameIsOver() {
