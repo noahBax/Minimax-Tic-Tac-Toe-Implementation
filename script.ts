@@ -1,6 +1,6 @@
 "use strict";
 
-const PLAY_GAME = document.getElementById("play-btn") as HTMLButtonElement;
+const AI_PLAYS = document.getElementById("aiGo") as HTMLButtonElement;
 const NEW_GAME = document.getElementById("new-game") as HTMLButtonElement;
 const gameCells = document.querySelectorAll(".cell") as NodeListOf<HTMLSpanElement>;
 const WINNER = document.getElementById("winner") as HTMLParagraphElement;
@@ -8,8 +8,7 @@ const PRUNES = document.getElementById("prunes") as HTMLParagraphElement;
 const EXPANDED = document.getElementById("expanded") as HTMLParagraphElement;
 const PATH_LENGTH = document.getElementById("pathLength") as HTMLParagraphElement;
 
-
-
+// O is obv the best piece. You can't change this
 const aiMark = "X";
 const humanMark = "O";
 
@@ -17,7 +16,7 @@ let gameOver = true;
 
 gameCells.forEach( (c) => c.addEventListener("click", insertPlayersMark));
 
-PLAY_GAME.addEventListener("click", playGame);
+AI_PLAYS.addEventListener("click", computersTurn);
 NEW_GAME.addEventListener("click", startNewGame);
 
 function insertPlayersMark(event: PointerEvent) {
@@ -33,7 +32,7 @@ function insertPlayersMark(event: PointerEvent) {
 
 }
 
-function playGame() {
+function computersTurn() {
     insertCompMark();
     checkIfGameIsOver();
 }
@@ -45,8 +44,10 @@ function startNewGame() {
         i.style.color = "#4b3621";
     });
     WINNER.innerText = "";
-    PLAY_GAME.style.display = "block";
+    AI_PLAYS.style.display = "block";
     NEW_GAME.style.display = "none";
+
+	NEW_GAME.innerText = "Play Again"
 
     PRUNES.textContent = '';
     PATH_LENGTH.textContent = '';
@@ -55,7 +56,7 @@ function startNewGame() {
 
 function getAllEmptyCellsIndexes(currBdState: BoardState): number[] {
     //@ts-ignore
-    return currBdState.filter(i => i != "X" && i != "O");
+    return currBdState.filter(i => i != humanMark && i != aiMark);
 }
 
 
@@ -104,11 +105,12 @@ function insertCompMark() {
     function minimax(currBdState: BoardState, currMark: Pieces, lookIndex: number, alpha_beta: [number, number]): NodeDescription {
         // Keep in mind, currBdState will not (except for the beginning) be the state of the current board
 
+		// Update stats
         worst_index = Math.min(worst_index, lookIndex);
         nodes_expanded++
 
         // First lets initialize what we will return
-        const ret: NodeDescription = { children: [], minimaxValue: undefined, index: -1, player: currMark == "O" ? 'HUMAN' : 'AI', passedInfo: alpha_beta };
+        const ret: NodeDescription = { children: [], minimaxValue: undefined, index: -1, player: currMark == humanMark ? 'HUMAN' : 'AI', passedInfo: alpha_beta };
         
         // Get the cells we have available to put things in
         const availableCellIndexes = getAllEmptyCellsIndexes(currBdState);
@@ -171,15 +173,15 @@ function insertCompMark() {
                         // If we got here, the child really thinks the board we passed it was shit, and so do we. Blegh
                         // So now we need to adjust the minimax value of our ret value and return it
                         ret.minimaxValue = alpha_beta[0];
+
+						// Prunes
                         paths_pruned++;
                         return ret;
 
-                        // Haha, now we have killed its siblings
                     }
                 }
             } else {
                 // I'mma disable the comment section here. Read above lazy
-                // Wait, who's lazy? You or me?
 
                 const result = minimax(boardCopy, aiMark, lookIndex - 1, [-Infinity, alpha_beta[1]]);
                 result.index = availableCellIndexes[j];
@@ -192,6 +194,8 @@ function insertCompMark() {
 
                     if (alpha_beta[0] >= alpha_beta[1]) {
                         ret.minimaxValue = alpha_beta[1];
+
+						// Prunes
                         paths_pruned++;
                         return ret;
                     }
@@ -201,7 +205,6 @@ function insertCompMark() {
 
         // If we made it here, we just need to return what we have
         // Our children liked what we gave them.
-        // The metaphor kinda breaks down here
 
         ret.minimaxValue = currMark == aiMark ? alpha_beta[0] : alpha_beta[1];
         return ret
@@ -216,8 +219,8 @@ function insertCompMark() {
         c.innerHTML ? currentBoardState.push(c.innerText as Pieces) : currentBoardState.push(i);
     });
     
+	// Compute the best playable spot
     const bestPlayInfo = minimax(currentBoardState, aiMark, 9, [-Infinity, Infinity]);
-    console.log(bestPlayInfo);
     
     // Now that we know the best play info, lets play on that space
     gameCells[bestPlayInfo.index].innerText = aiMark;
@@ -254,7 +257,7 @@ function checkIfGameIsOver() {
         WINNER.innerText = "Draw!";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     } else if (
         (currentBoardState[0] == aiMark && (
             currentBoardState[1] == aiMark && currentBoardState[2] == aiMark ||
@@ -274,7 +277,7 @@ function checkIfGameIsOver() {
         WINNER.innerText = "AI Win!";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     } else if (
         (currentBoardState[0] == humanMark && (currentBoardState[1] == humanMark && currentBoardState[2] == humanMark || currentBoardState[3] == humanMark && currentBoardState[6] == humanMark)) ||
         (currentBoardState[8] == humanMark && (currentBoardState[7] == humanMark && currentBoardState[6] == humanMark || currentBoardState[5] == humanMark && currentBoardState[2] == humanMark)) ||
@@ -285,10 +288,10 @@ function checkIfGameIsOver() {
             currentBoardState[2] == humanMark && currentBoardState[6] == humanMark
         ))
     ) {
-        WINNER.innerText = "Human Win!";
+        WINNER.innerText = "Hmmm...Human Win...Sus!";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     }
 
 }

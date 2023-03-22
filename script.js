@@ -1,16 +1,17 @@
 "use strict";
-const PLAY_GAME = document.getElementById("play-btn");
+const AI_PLAYS = document.getElementById("aiGo");
 const NEW_GAME = document.getElementById("new-game");
 const gameCells = document.querySelectorAll(".cell");
 const WINNER = document.getElementById("winner");
 const PRUNES = document.getElementById("prunes");
 const EXPANDED = document.getElementById("expanded");
 const PATH_LENGTH = document.getElementById("pathLength");
+// O is obv the best piece. You can't change this
 const aiMark = "X";
 const humanMark = "O";
 let gameOver = true;
 gameCells.forEach((c) => c.addEventListener("click", insertPlayersMark));
-PLAY_GAME.addEventListener("click", playGame);
+AI_PLAYS.addEventListener("click", computersTurn);
 NEW_GAME.addEventListener("click", startNewGame);
 function insertPlayersMark(event) {
     if (!event.target.innerText && !gameOver && event.target.innerText == "") {
@@ -22,7 +23,7 @@ function insertPlayersMark(event) {
         }
     }
 }
-function playGame() {
+function computersTurn() {
     insertCompMark();
     checkIfGameIsOver();
 }
@@ -33,15 +34,16 @@ function startNewGame() {
         i.style.color = "#4b3621";
     });
     WINNER.innerText = "";
-    PLAY_GAME.style.display = "block";
+    AI_PLAYS.style.display = "block";
     NEW_GAME.style.display = "none";
+    NEW_GAME.innerText = "Play Again";
     PRUNES.textContent = '';
     PATH_LENGTH.textContent = '';
     EXPANDED.textContent = '';
 }
 function getAllEmptyCellsIndexes(currBdState) {
     //@ts-ignore
-    return currBdState.filter(i => i != "X" && i != "O");
+    return currBdState.filter(i => i != humanMark && i != aiMark);
 }
 var timer = 150;
 function insertCompMark() {
@@ -65,10 +67,11 @@ function insertCompMark() {
     }
     function minimax(currBdState, currMark, lookIndex, alpha_beta) {
         // Keep in mind, currBdState will not (except for the beginning) be the state of the current board
+        // Update stats
         worst_index = Math.min(worst_index, lookIndex);
         nodes_expanded++;
         // First lets initialize what we will return
-        const ret = { children: [], minimaxValue: undefined, index: -1, player: currMark == "O" ? 'HUMAN' : 'AI', passedInfo: alpha_beta };
+        const ret = { children: [], minimaxValue: undefined, index: -1, player: currMark == humanMark ? 'HUMAN' : 'AI', passedInfo: alpha_beta };
         // Get the cells we have available to put things in
         const availableCellIndexes = getAllEmptyCellsIndexes(currBdState);
         // Check to see if the board we were given has a winner scenario
@@ -113,15 +116,14 @@ function insertCompMark() {
                         // If we got here, the child really thinks the board we passed it was shit, and so do we. Blegh
                         // So now we need to adjust the minimax value of our ret value and return it
                         ret.minimaxValue = alpha_beta[0];
+                        // Prunes
                         paths_pruned++;
                         return ret;
-                        // Haha, now we have killed its siblings
                     }
                 }
             }
             else {
                 // I'mma disable the comment section here. Read above lazy
-                // Wait, who's lazy? You or me?
                 const result = minimax(boardCopy, aiMark, lookIndex - 1, [-Infinity, alpha_beta[1]]);
                 result.index = availableCellIndexes[j];
                 ret.children.push(result);
@@ -130,6 +132,7 @@ function insertCompMark() {
                     ret.index = result.index;
                     if (alpha_beta[0] >= alpha_beta[1]) {
                         ret.minimaxValue = alpha_beta[1];
+                        // Prunes
                         paths_pruned++;
                         return ret;
                     }
@@ -138,7 +141,6 @@ function insertCompMark() {
         }
         // If we made it here, we just need to return what we have
         // Our children liked what we gave them.
-        // The metaphor kinda breaks down here
         ret.minimaxValue = currMark == aiMark ? alpha_beta[0] : alpha_beta[1];
         return ret;
     }
@@ -148,8 +150,8 @@ function insertCompMark() {
     gameCells.forEach((c, i) => {
         c.innerHTML ? currentBoardState.push(c.innerText) : currentBoardState.push(i);
     });
+    // Compute the best playable spot
     const bestPlayInfo = minimax(currentBoardState, aiMark, 9, [-Infinity, Infinity]);
-    console.log(bestPlayInfo);
     // Now that we know the best play info, lets play on that space
     gameCells[bestPlayInfo.index].innerText = aiMark;
     // Update stats
@@ -179,7 +181,7 @@ function checkIfGameIsOver() {
         WINNER.innerText = "Draw!";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     }
     else if ((currentBoardState[0] == aiMark && (currentBoardState[1] == aiMark && currentBoardState[2] == aiMark ||
         currentBoardState[3] == aiMark && currentBoardState[6] == aiMark ||
@@ -192,7 +194,7 @@ function checkIfGameIsOver() {
         WINNER.innerText = "AI Win!";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     }
     else if ((currentBoardState[0] == humanMark && (currentBoardState[1] == humanMark && currentBoardState[2] == humanMark || currentBoardState[3] == humanMark && currentBoardState[6] == humanMark)) ||
         (currentBoardState[8] == humanMark && (currentBoardState[7] == humanMark && currentBoardState[6] == humanMark || currentBoardState[5] == humanMark && currentBoardState[2] == humanMark)) ||
@@ -200,9 +202,9 @@ function checkIfGameIsOver() {
             currentBoardState[3] == humanMark && currentBoardState[5] == humanMark ||
             currentBoardState[0] == humanMark && currentBoardState[8] == humanMark ||
             currentBoardState[2] == humanMark && currentBoardState[6] == humanMark))) {
-        WINNER.innerText = "Human Win!";
+        WINNER.innerText = "Hmmm...Human Win...Sus!";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     }
 }
