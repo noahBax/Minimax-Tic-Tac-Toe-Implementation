@@ -1,16 +1,17 @@
 "use strict";
-const PLAY_GAME = document.getElementById("play-btn");
+const AI_PLAYS = document.getElementById("aiGo");
 const NEW_GAME = document.getElementById("new-game");
 const gameCells = document.querySelectorAll(".cell");
 const WINNER = document.getElementById("winner");
 const PRUNES = document.getElementById("prunes");
 const EXPANDED = document.getElementById("expanded");
 const PATH_LENGTH = document.getElementById("pathLength");
+// O is obv the best piece. You can't change this
 const aiMark = "X";
 const humanMark = "O";
 let gameOver = true;
 gameCells.forEach((c) => c.addEventListener("click", insertPlayersMark));
-PLAY_GAME.addEventListener("click", playGame);
+AI_PLAYS.addEventListener("click", computersTurn);
 NEW_GAME.addEventListener("click", startNewGame);
 function insertPlayersMark(event) {
     if (!event.target.innerText && !gameOver && event.target.innerText == "") {
@@ -22,7 +23,7 @@ function insertPlayersMark(event) {
         }
     }
 }
-function playGame() {
+function computersTurn() {
     insertCompMark();
     checkIfGameIsOver();
 }
@@ -32,8 +33,9 @@ function startNewGame() {
         i.innerText = "";
     });
     WINNER.innerText = "";
-    PLAY_GAME.style.display = "block";
+    AI_PLAYS.style.display = "block";
     NEW_GAME.style.display = "none";
+    NEW_GAME.innerText = "Play Again";
     PRUNES.textContent = '';
     PATH_LENGTH.textContent = '';
     EXPANDED.textContent = '';
@@ -65,10 +67,11 @@ function insertCompMark() {
     let worst_index = 9;
     function minimax(currBdState, currMark, lookIndex, alpha_beta) {
         // Keep in mind, currBdState will not (except for the beginning) be the state of the current board
+        // Update stats
         worst_index = Math.min(worst_index, lookIndex);
         nodes_expanded++;
         // First lets initialize what we will return
-        const ret = { children: [], minimaxValue: undefined, index: -1, player: currMark == "O" ? 'HUMAN' : 'AI', passedInfo: alpha_beta };
+        const ret = { children: [], minimaxValue: undefined, index: -1, player: currMark == humanMark ? 'HUMAN' : 'AI', passedInfo: alpha_beta };
         // Get the cells we have available to put things in
         const availableCellIndexes = getAllEmptyCellsIndexes(currBdState);
         // Check to see if the board we were given has a winner scenario
@@ -113,6 +116,7 @@ function insertCompMark() {
                         // If we got here, the child really thinks the board we passed it was shit, and so do we. Blegh
                         // So now we need to adjust the minimax value of our ret value and return it
                         ret.minimaxValue = alpha_beta[0];
+                        // Prunes
                         paths_pruned++;
                         return ret;
                     }
@@ -127,6 +131,7 @@ function insertCompMark() {
                     ret.index = result.index;
                     if (alpha_beta[0] >= alpha_beta[1]) {
                         ret.minimaxValue = alpha_beta[1];
+                        // Prunes
                         paths_pruned++;
                         return ret;
                     }
@@ -143,8 +148,8 @@ function insertCompMark() {
     gameCells.forEach((c, i) => {
         c.innerHTML ? currentBoardState.push(c.innerText) : currentBoardState.push(i);
     });
+    // Compute the best playable spot
     const bestPlayInfo = minimax(currentBoardState, aiMark, 9, [-Infinity, Infinity]);
-    console.log(bestPlayInfo);
     // Now that we know the best play info, lets play on that space
     gameCells[bestPlayInfo.index].innerText = aiMark;
     // Update stats
@@ -174,19 +179,19 @@ function checkIfGameIsOver() {
         WINNER.innerText = "AI Win!";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     }
     else if (checkIfIsWinner(currentBoardState, humanMark)) {
-        WINNER.innerText = "Cheater!";
+        WINNER.innerText = "Hmmm...Human Win...Sus!";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     }
     else if (emptyCells == 0) {
         // If there are no empty cells and the above checks failed, then the game is over
         WINNER.innerText = "Draw!";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     }
 }
