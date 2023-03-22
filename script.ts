@@ -129,7 +129,8 @@ function insertCompMark() {
                 ret.minimaxValue = lookIndex;
                 return ret;
             } else if (availableCellIndexes.length == 0) {
-                ret.minimaxValue = 0
+				// Needs to be checked last, both this and the above could be true
+                ret.minimaxValue = 0;
                 return ret;
             }
         }
@@ -259,12 +260,12 @@ function checkIfGameIsOver() {
         WINNER.innerText = "AI Win!";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     } else if (checkIfIsWinner(currentBoardState, humanMark)) {
         WINNER.innerText = "Hmmm...Human Win...Sus";
         gameOver = true;
         NEW_GAME.style.display = "block";
-        PLAY_GAME.style.display = "none";
+        AI_PLAYS.style.display = "none";
     } else if (emptyCells == 0) {
         // If there are no empty cells and the above checks failed, then the game is over
         WINNER.innerText = "Draw!";
